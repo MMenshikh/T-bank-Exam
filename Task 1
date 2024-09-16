@@ -1,0 +1,40 @@
+// Java language
+
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        char[] input = scanner.next().toCharArray();
+
+        StringBuilder output = new StringBuilder();
+
+        for (int i = 0; i < input.length; i++) {
+            if (input[i] == '-') {
+                for (int j = Character.getNumericValue(input[i - 1]) + 1; j < Character.getNumericValue(input[i + 1]); j++) {
+                    output.append(j);
+                    output.append(" ");
+                }
+            }
+            else if (input[i] == ',') {
+                continue;
+            }
+            else {
+                output.append(input[i]);
+
+                if (i == input.length - 1) {
+                    break;
+                }
+                if (input[i + 1] == '-' || input[i + 1] == ',') {
+                    output.append(" ");
+                }
+                else {
+                    continue;
+                }
+            }
+        }
+
+        System.out.println(output);
+    }
+}
