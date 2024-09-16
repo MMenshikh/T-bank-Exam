@@ -1,0 +1,54 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <algorithm>
+
+using namespace std;
+
+int main()
+{
+    int n;
+    cin >> n;
+
+    vector<vector<int>> graph(n + 1);
+    vector<int> in_degree(n + 1, 0);
+    vector<long long> time(n + 1, 0);
+    vector<long long> completion_time(n + 1, 0);
+
+    for (int i = 1; i <= n; i++) {
+        cin >> time[i];
+        int dependency;
+        while (cin.peek() != '\n' && cin >> dependency) {
+            graph[dependency].push_back(i);
+            in_degree[i]++;
+        }
+    }
+
+    queue<int> q;
+    for (int i = 1; i <= n; i++) {
+        if (in_degree[i] == 0) {
+            q.push(i);
+            completion_time[i] = time[i];
+        }
+    }
+
+    while (!q.empty()) {
+        int process = q.front();
+        q.pop();
+        for (int dependent: graph[process]) {
+            completion_time[dependent] = max(completion_time[dependent], completion_time[process] + time[dependent]);
+            if (--in_degree[dependent] == 0) {
+                q.push(dependent);
+            }
+        }
+    }
+
+    long long min_completion_time = 0;
+    for (int i = 1; i <= n; i++) {
+        min_completion_time = max(min_completion_time, completion_time[i]);
+    }
+
+    cout << min_completion_time << endl;
+
+    return 0;
+}
