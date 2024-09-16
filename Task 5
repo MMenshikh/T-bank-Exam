@@ -1,0 +1,128 @@
+// C++ language
+
+#include <iostream>
+#include <iomanip>
+#include <string>
+#include <map>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+class Time
+{
+public:
+    int hh, mm, ss;
+
+    Time()
+        : hh(0), mm(0), ss(0)
+    {}
+    Time(int h, int m, int s)
+        : hh(h), mm(m), ss(s)
+    {}
+
+    int toSec() const
+    {
+        return hh * 3600 + mm * 60 + ss;
+    }
+
+    void fromString(const string &timeStr)
+    {
+        sscanf(timeStr.c_str(), "%d:%d:%d", &hh, &mm, &ss);
+    }
+
+    int operator-(const Time &other) const
+    {
+        int totalSec1 = this->toSec();
+        int totalSec2 = other.toSec();
+        if (totalSec1 < totalSec2) {
+            totalSec1 += 24 * 3600;
+        }
+        return totalSec1 - totalSec2;
+    }
+};
+
+class Team
+{
+public:
+    int successfulAttacks;
+    int penaltyTime;
+    map<char, int> attempts;
+
+    Team()
+        : successfulAttacks(0), penaltyTime(0)
+    {}
+};
+
+bool compareTeams(const pair<string, Team> &a, const pair<string, Team> &b)
+{
+    if (a.second.successfulAttacks != b.second.successfulAttacks)
+        return a.second.successfulAttacks > b.second.successfulAttacks;
+    if (a.second.penaltyTime != b.second.penaltyTime)
+        return a.second.penaltyTime < b.second.penaltyTime;
+    return a.first < b.first;
+}
+
+int main()
+{
+    string startTimeStr;
+    cin >> startTimeStr;
+
+    Time startTime;
+    startTime.fromString(startTimeStr);
+
+    int n;
+    cin >> n;
+    cin.ignore();
+
+    map<string, Team> teams;
+    for (int i = 0; i < n; ++i) {
+        string line;
+        getline(cin, line);
+
+        size_t firstQuote = line.find('"');
+        size_t secondQuote = line.find('"', firstQuote + 1);
+        string teamName = line.substr(firstQuote + 1, secondQuote - firstQuote - 1);
+
+        size_t timePos = secondQuote + 2;
+        string requestTimeStr = line.substr(timePos, 8);
+        Time requestTime;
+        requestTime.fromString(requestTimeStr);
+
+        char serverId = line[timePos + 9];
+        string result = line.substr(timePos + 11);
+
+        if (result == "PONG") {
+            continue;
+        }
+
+        Team &team = teams[teamName];
+        if (result == "ACCESSED") {
+            int elapsedSeconds = requestTime - startTime;
+            int elapsedMinutes = elapsedSeconds / 60;
+            team.penaltyTime += elapsedMinutes + team.attempts[serverId] * 20;
+            team.successfulAttacks++;
+            team.attempts.erase(serverId);
+        }
+        else if (result == "DENIED" || result == "FORBIDEN") {
+            team.attempts[serverId]++;
+        }
+    }
+
+    vector<pair<string, Team>> sortedTeams(teams.begin(), teams.end());
+    sort(sortedTeams.begin(), sortedTeams.end(), compareTeams);
+
+    int rank = 1;
+    for (size_t i = 0; i < sortedTeams.size(); ++i) {
+        if (i > 0 &&
+            (sortedTeams[i].second.successfulAttacks != sortedTeams[i - 1].second.successfulAttacks ||
+                sortedTeams[i].second.penaltyTime != sortedTeams[i - 1].second.penaltyTime)) {
+            rank = i + 1;
+        }
+        const auto &entry = sortedTeams[i];
+        cout << rank << " \"" << entry.first << "\" " << entry.second.successfulAttacks << " "
+             << entry.second.penaltyTime << endl;
+    }
+
+    return 0;
+}
